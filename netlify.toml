@@ -1,0 +1,100 @@
+# ═══════════════════════════════════════════════════
+# Word Warriors — Netlify Configuration
+# Security headers, caching, and redirect rules
+# ═══════════════════════════════════════════════════
+
+# ── Build settings (not needed for single HTML file but good practice)
+[build]
+  publish = "."
+
+# ── Global security headers applied to every page
+[[headers]]
+  for = "/*"
+  [headers.values]
+
+    # Prevent clickjacking — stops your app being embedded in iframes on other sites
+    X-Frame-Options = "DENY"
+
+    # Stops browsers guessing file types — prevents MIME-type attacks
+    X-Content-Type-Options = "nosniff"
+
+    # Blocks XSS attacks in older browsers
+    X-XSS-Protection = "1; mode=block"
+
+    # Controls referrer info sent when users click external links
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+    # Permissions Policy — disables features your app doesn't need
+    # Blocks attackers from accessing camera, microphone, location etc.
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=(), bluetooth=()"
+
+    # HSTS — forces HTTPS always, even if someone types http://
+    # max-age = 1 year. includeSubDomains covers all subdomains too.
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+
+    # Content Security Policy — the strongest protection
+    # Only allows content from trusted sources you explicitly list
+    Content-Security-Policy = """
+      default-src 'self';
+      script-src 'self' 'unsafe-inline'
+        https://www.gstatic.com
+        https://www.googletagmanager.com
+        https://www.google-analytics.com;
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+      font-src 'self' https://fonts.gstatic.com;
+      img-src 'self' data: https:;
+      connect-src 'self'
+        https://*.firebaseio.com
+        https://*.firebasedatabase.app
+        wss://*.firebaseio.com
+        wss://*.firebasedatabase.app
+        https://www.google-analytics.com
+        https://analytics.google.com
+        https://region1.google-analytics.com;
+      frame-ancestors 'none';
+      base-uri 'self';
+      form-action 'self' mailto:;
+      upgrade-insecure-requests;
+    """
+
+# ── Cache the HTML file for a short time so updates deploy fast
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# ── Cache static assets (icons, images) for longer
+[[headers]]
+  for = "/*.png"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.ico"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# ── Redirects — forces www to non-www and HTTP to HTTPS
+[[redirects]]
+  from = "http://wordwarriors.app/*"
+  to   = "https://wordwarriors.app/:splat"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from = "http://www.wordwarriors.app/*"
+  to   = "https://wordwarriors.app/:splat"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from = "https://www.wordwarriors.app/*"
+  to   = "https://wordwarriors.app/:splat"
+  status = 301
+  force  = true
+
+# ── Single page app fallback — all routes serve the main HTML file
+[[redirects]]
+  from   = "/*"
+  to     = "/word-warriors.html"
+  status = 200
